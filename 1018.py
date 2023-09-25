@@ -31,7 +31,7 @@ stack = []
 def dfs(r,c):
     if m-c<8:
         print(min(stack))
-
+        return min(stack)
     elif n-r<8:
         dfs(0,c+1)
     else:
