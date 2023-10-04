@@ -13,10 +13,8 @@ if len(lines)!=1 and len(s) == 1:
     print(lines[0])
 else:
     while True:
-
         m = ((h-l) // 2) + l
         k =sum(list(map(lambda x: x//m, lines)))
-
         if k<N:
             h = m
         elif k >= N:
@@ -28,6 +26,5 @@ else:
             else:
                 print(l)
                 break
-
 
 
