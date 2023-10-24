@@ -14,4 +14,3 @@ while True:
     else:
         temp = q.popleft()
         q.append(temp)
-
