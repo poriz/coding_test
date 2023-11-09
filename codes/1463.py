@@ -1,9 +1,6 @@
 import sys
-
 n = int(sys.stdin.readline())
-
 d= [0] * (n+1) # 값을 저장하는 배열 생성
-
 for i in range(2, n+1):
     # 현재의 수에서 1을 빼는 경우
     d[i] = d[i-1] + 1
@@ -13,6 +10,5 @@ for i in range(2, n+1):
     # 현재의 수가 3으로 나누어 떨어지는 경우
     if i%3 == 0:
         d[i] = min(d[i], d[i//3] + 1)
-
 # 결과 출력
 print(d[n])
