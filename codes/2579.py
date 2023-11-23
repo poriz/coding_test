@@ -3,7 +3,7 @@ N = int(sys.stdin.readline())
 answer = [0 for _ in range(N+1)]
 stairs = [0]
 for _ in range(N):
-    stairs.append(int(sys.stdin.readline()))
+    stairs.append(int(sys.stdin.readlines()))
 
 for i,v in enumerate(stairs):
     if i==0:
