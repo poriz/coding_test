@@ -29,16 +29,3 @@ while q:
 
 print(sum(visited)-1)
 
-# input:
-# 9
-# 8
-# 2 3
-# 4 5
-# 6 7
-# 8 9
-# 2 5
-# 4 7
-# 6 9
-# 1 8
-# output: 2
-# answer: 8
