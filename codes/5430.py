@@ -56,4 +56,3 @@ for _ in range(T):
 for i in answer_Arr:
     print(i)
 
-
