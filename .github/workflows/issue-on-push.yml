@@ -1,4 +1,4 @@
-name: Create Issue on Push
+name: Create Issue from Commit and Link to Project
 
 on:
   push:
@@ -8,17 +8,24 @@ on:
 jobs:
   create_issue:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      contents: read
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # 이전 커밋들을 포함하여 모든 히스토리를 가져옵니다.
+      
+      - name: Get last commit message
+        id: last-commit-message
+        run: echo "::set-output name=message::$(git log -1 --pretty=%B)"
+      
       - name: Create Issue
         uses: actions/github-script@v6
         with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const issueTitle = `New Push on ${process.env.GITHUB_REF_NAME}`;
-            const issueBody = `A new push has been made to \`${process.env.GITHUB_REF_NAME}\` branch. Please check the updates.`;
-            const labels = ['done'];
+            const issueTitle = `${{steps.last-commit-message.outputs.message}}`;
+            const issueBody = `This issue is automatically generated from the last commit on the main branch.`;
+            const labels = ['auto-generated'];
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
