@@ -40,22 +40,29 @@ jobs:
             now.setHours(now.getHours() + 9); // KST로 변환
             const formattedNow = now.toISOString().replace('T', ' ').substring(0, 16).replace('Z', '');
 
-            // process.env.LAST_COMMIT_MESSAGE를 사용하여 커밋 메시지를 가져옵니다.
             const commitMessage = process.env.LAST_COMMIT_MESSAGE;
             const changedFiles = process.env.CHANGED_FILES.split('\n').filter(line => line).map(file => `- [${file}](${context.payload.repository.html_url}/blob/main/${file})`).join('\n');
             
-            const issueTitle = `[${formattedNow} KST] ${commitMessage}`;
+            const issueTitle = `[${formattedNow}] ${commitMessage}`;
             const issueBody = `
               This issue is automatically generated from the last commit on the main branch.
               
               ### Changed Files
               ${changedFiles}
-            `;
+            `.trim();
 
-            await github.rest.issues.create({
+            const issueCreationResponse = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: issueTitle,
               body: issueBody,
               labels: ['auto-generated'],
+            });
+
+            // 이슈에 assignees 추가
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueCreationResponse.data.number,
+              assignees: ['poriz']
             });
