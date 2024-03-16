@@ -1,4 +1,4 @@
-# 문제의 key는 서로 다른 양의 정수이다..
+# 문제의 key는 서로 다른 양의 정수이다!
 n = int(input())
 l1 = list(map(int, input().split()))
 x = int(input())
