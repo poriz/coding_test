@@ -28,7 +28,12 @@ jobs:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             async function run() {
-              const issueTitle = `${{steps.last-commit-message.outputs.message}}`;
+              const now = new Date();
+              const formattedNow = now.toISOString().replace('T', ' ').substring(0, 16);
+              // GitHub Actions의 steps 객체에서 출력 값을 정확하게 참조
+              const commitMessage = "${{ steps.last-commit-message.outputs.message }}";
+              // 템플릿 리터럴을 사용하여 문자열을 구성
+              const issueTitle = `[${formattedNow}] ${commitMessage}`;
               const issueBody = 'This issue is automatically generated from the last commit on the main branch.';
               const labels = ['auto-generated'];
 
@@ -41,6 +46,8 @@ jobs:
                 labels: labels
               });
 
+              console.log(`Issue created: ${issueCreationResponse.data.html_url}`);
+              
               // 생성된 이슈 번호
               const issueNumber = issueCreationResponse.data.number;
 
