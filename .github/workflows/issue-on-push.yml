@@ -16,43 +16,46 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 2  # 이전 커밋과 비교하기 위해 필요한 깊이
+          fetch-depth: 2  # 변경 사항을 확인하기 위해 최소한의 깊이 설정
 
       - name: Get changed files
         id: changed-files
         run: |
-          echo "::set-output name=list::$(git diff --name-only HEAD^ HEAD | xargs -I {} echo \"- {}\" | tr '\n' ',' )"
-        shell: bash
-      
+          echo "::set-output name=list::$(git diff --name-only HEAD^ HEAD | xargs -I {} echo \"- {}\" | tr '\n' ',')"
+
       - name: Get last commit message
         id: last-commit-message
         run: echo "::set-output name=message::$(git log -1 --pretty=%B)"
 
-      - name: Create Issue and Add Assignees
+      - name: Create Issue
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             async function run() {
+              // UTC 시간을 기준으로 현재 시간을 가져온 후, KST로 변환 (UTC+9)
               const now = new Date();
-              const formattedNow = now.toISOString().replace('T', ' ').substring(0, 16);
-              const commitMessage = "${{ steps.last-commit-message.outputs.message }}";
-              const changedFilesList = "${{ steps.changed-files.outputs.list }}".slice(0, -1).split(',').join('\n');
-              const issueTitle = `[${formattedNow}] ${commitMessage}`;
-              const issueBody = `This issue is automatically generated from the last commit on the main branch.\n\n### Changed Files:\n${changedFilesList}`;
-              const labels = ['auto-generated'];
+              now.setHours(now.getHours() + 9); // KST로 변환
+              const formattedNow = now.toISOString().replace('T', ' ').substring(0, 16).replace('Z', '');
 
-              // 이슈 생성
-              const issueCreationResponse = await github.rest.issues.create({
+              const commitMessage = `${process.env.COMMIT_MESSAGE}`;
+              const changedFiles = process.env.CHANGED_FILES.split(',').join('\\n');
+
+              const issueTitle = `[${formattedNow} KST] ${commitMessage}`;
+              const issueBody = `This issue is automatically generated from the last commit on the main branch.\\n\\n### Changed Files:\\n${changedFiles}`;
+
+              const response = await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 title: issueTitle,
                 body: issueBody,
-                labels: labels
+                labels: ['auto-generated'],
               });
 
-              console.log(`Issue created: ${issueCreationResponse.data.html_url}`);
+              console.log(`Issue created: ${response.data.html_url}`);
             }
-
-            // 함수 실행
+            
             run().catch(err => console.error(err));
+        env:
+          COMMIT_MESSAGE: ${{ steps.last-commit-message.outputs.message }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.list }}
