@@ -1,4 +1,4 @@
-name: Create Issue with File Links
+name: Create Issue from Commit and Link to Project
 
 on:
   push:
@@ -16,38 +16,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 2
+          fetch-depth: 2  # 이전 커밋과 비교하기 위해 필요
 
       - name: Get changed files
         id: changed-files
         run: |
-          echo "::set-output name=list::$(git diff --name-only HEAD^ HEAD | xargs -I {} echo \"- {}\" | tr '\n' ',')"
-
-      - name: Get last commit message
-        id: last-commit-message
-        run: echo "::set-output name=message::$(git log -1 --pretty=%B)"
+          git diff --name-only HEAD^ HEAD > changed_files.txt
+          echo "CHANGED_FILES<<EOF" >> $GITHUB_ENV
+          cat changed_files.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Create Issue
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            async function run() {
-              const repositoryUrl = context.payload.repository.html_url;
-              const changedFilesRaw = "${{ steps.changed-files.outputs.list }}";
-              const changedFiles = changedFilesRaw.slice(0, -1).split(',').map(file => `- [${file}](${repositoryUrl}/blob/main/${file.replace(' ', '%20')})`).join('\n');
+            const changedFiles = process.env.CHANGED_FILES.split('\n').filter(line => line).map(file => `- [${file}](${context.payload.repository.html_url}/blob/${{ github.ref }}/blob/main/${file})`).join('\n');
+            const issueTitle = 'Automated Issue for Commit Changes';
+            const issueBody = `
+              This issue is automatically generated from the last commit on the main branch.
+              
+              ### Changed Files
+              ${changedFiles}
+            `;
 
-              const issueTitle = "Changes detected in push";
-              const commitMessage = "${{ steps.last-commit-message.outputs.message }}";
-              const issueBody = `This issue is automatically generated from the last commit on the main branch.\n\n**Commit message:**\n${commitMessage}\n\n### Changed Files:\n${changedFiles}`;
-
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: issueTitle,
-                body: issueBody,
-                labels: ['auto-generated'],
-              });
-            }
-
-            run().catch(err => console.error(err));
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['auto-generated'],
+            });
