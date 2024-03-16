@@ -21,27 +21,33 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-          echo "::set-output name=list::$(git diff --name-only HEAD^ HEAD | xargs -I {} echo \"{}\" | tr '\n' ',')"
+          echo "::set-output name=list::$(git diff --name-only HEAD^ HEAD | xargs -I {} echo \"- {}\" | tr '\n' ',')"
 
-      - name: Create Issue with Links
+      - name: Get last commit message
+        id: last-commit-message
+        run: echo "::set-output name=message::$(git log -1 --pretty=%B)"
+
+      - name: Create Issue
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             async function run() {
               const repositoryUrl = context.payload.repository.html_url;
-              const changedFiles = "${{ steps.changed-files.outputs.list }}".slice(0, -1).split(',');
-              const changedFilesLinks = changedFiles.map(file => `[${file}](${repositoryUrl}/blob/main/${file})`).join('\n');
+              const changedFilesRaw = "${{ steps.changed-files.outputs.list }}";
+              const changedFiles = changedFilesRaw.slice(0, -1).split(',').map(file => `- [${file}](${repositoryUrl}/blob/main/${file.replace(' ', '%20')})`).join('\n');
 
-              const issueBody = `This issue is automatically generated from the last commit on the main branch.\n\n### Changed Files:\n${changedFilesLinks}`;
+              const issueTitle = "Changes detected in push";
+              const commitMessage = "${{ steps.last-commit-message.outputs.message }}";
+              const issueBody = `This issue is automatically generated from the last commit on the main branch.\n\n**Commit message:**\n${commitMessage}\n\n### Changed Files:\n${changedFiles}`;
 
               await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: 'Automatically Generated Issue from Push',
+                title: issueTitle,
                 body: issueBody,
                 labels: ['auto-generated'],
               });
             }
-            
+
             run().catch(err => console.error(err));
