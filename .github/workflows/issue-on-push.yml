@@ -31,8 +31,14 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
+            const now = new Date();
+            now.setHours(now.getHours() + 9); // KST로 변환
+            const formattedNow = now.toISOString().replace('T', ' ').substring(0, 16).replace('Z', '');
+
+            const commitMessage = `${process.env.COMMIT_MESSAGE}`;
             const changedFiles = process.env.CHANGED_FILES.split('\n').filter(line => line).map(file => `- [${file}](${context.payload.repository.html_url}/blob/${{ github.ref }}/blob/main/${file})`).join('\n');
-            const issueTitle = 'Automated Issue for Commit Changes';
+            
+            const issueTitle = `[${formattedNow}] ${commitMessage}`;
             const issueBody = `
               This issue is automatically generated from the last commit on the main branch.
               
@@ -47,3 +53,10 @@ jobs:
               body: issueBody,
               labels: ['auto-generated'],
             });
+              console.log(`Issue created: ${response.data.html_url}`);
+            }
+            
+            run().catch(err => console.error(err));
+        env:
+          COMMIT_MESSAGE: ${{ steps.last-commit-message.outputs.message }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.list }}
