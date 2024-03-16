@@ -38,3 +38,13 @@ jobs:
               body: issueBody,
               labels: labels
             });
+            // 생성된 이슈 번호
+            const issueNumber = issueCreationResponse.data.number;
+    
+            // 이슈에 assignees 추가
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              assignees: ['poriz'] // 할당할 사용자의 GitHub 사용자명 목록
+            });
