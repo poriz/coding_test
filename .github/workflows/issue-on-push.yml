@@ -53,10 +53,3 @@ jobs:
               body: issueBody,
               labels: ['auto-generated'],
             });
-              console.log(`Issue created: ${response.data.html_url}`);
-            }
-            
-            run().catch(err => console.error(err));
-        env:
-          COMMIT_MESSAGE: ${{ steps.last-commit-message.outputs.message }}
-          CHANGED_FILES: ${{ steps.changed-files.outputs.list }}
