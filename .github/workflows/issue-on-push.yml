@@ -4,11 +4,10 @@ on:
   push:
     branches:
       - main
-      
+
 permissions:
   contents: read
   issues: write
-
 
 jobs:
   create_issue:
@@ -18,33 +17,41 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0  # 이전 커밋들을 포함하여 모든 히스토리를 가져옵니다.
-      
+
       - name: Get last commit message
         id: last-commit-message
         run: echo "::set-output name=message::$(git log -1 --pretty=%B)"
-      
-      - name: Create Issue
+
+      - name: Create Issue and Add Assignees
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const issueTitle = `${{steps.last-commit-message.outputs.message}}`;
-            const issueBody = `This issue is automatically generated from the last commit on the main branch.`;
-            const labels = ['auto-generated'];
-            github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: issueTitle,
-              body: issueBody,
-              labels: labels
-            });
-            // 생성된 이슈 번호
-            const issueNumber = issueCreationResponse.data.number;
-    
-            // 이슈에 assignees 추가
-            await github.rest.issues.addAssignees({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              assignees: ['poriz'] // 할당할 사용자의 GitHub 사용자명 목록
-            });
+            async function run() {
+              const issueTitle = `${{steps.last-commit-message.outputs.message}}`;
+              const issueBody = 'This issue is automatically generated from the last commit on the main branch.';
+              const labels = ['auto-generated'];
+
+              // 이슈 생성
+              const issueCreationResponse = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: issueBody,
+                labels: labels
+              });
+
+              // 생성된 이슈 번호
+              const issueNumber = issueCreationResponse.data.number;
+
+              // 이슈에 assignees 추가
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                assignees: ['poriz'] // 할당할 사용자의 GitHub 사용자명
+              });
+            }
+
+            // 함수 실행
+            run().catch(err => console.error(err));
