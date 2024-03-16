@@ -16,8 +16,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # 이전 커밋들을 포함하여 모든 히스토리를 가져옵니다.
+          fetch-depth: 2  # 이전 커밋과 비교하기 위해 필요한 깊이
 
+      - name: Get changed files
+        id: changed-files
+        run: |
+          echo "::set-output name=list::$(git diff --name-only HEAD^ HEAD | xargs -I {} echo \"- {}\" | tr '\n' ',' )"
+        shell: bash
+      
       - name: Get last commit message
         id: last-commit-message
         run: echo "::set-output name=message::$(git log -1 --pretty=%B)"
@@ -30,11 +36,10 @@ jobs:
             async function run() {
               const now = new Date();
               const formattedNow = now.toISOString().replace('T', ' ').substring(0, 16);
-              // GitHub Actions의 steps 객체에서 출력 값을 정확하게 참조
               const commitMessage = "${{ steps.last-commit-message.outputs.message }}";
-              // 템플릿 리터럴을 사용하여 문자열을 구성
+              const changedFilesList = "${{ steps.changed-files.outputs.list }}".slice(0, -1).split(',').join('\n');
               const issueTitle = `[${formattedNow}] ${commitMessage}`;
-              const issueBody = 'This issue is automatically generated from the last commit on the main branch.';
+              const issueBody = `This issue is automatically generated from the last commit on the main branch.\n\n### Changed Files:\n${changedFilesList}`;
               const labels = ['auto-generated'];
 
               // 이슈 생성
@@ -47,17 +52,6 @@ jobs:
               });
 
               console.log(`Issue created: ${issueCreationResponse.data.html_url}`);
-              
-              // 생성된 이슈 번호
-              const issueNumber = issueCreationResponse.data.number;
-
-              // 이슈에 assignees 추가
-              await github.rest.issues.addAssignees({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueNumber,
-                assignees: ['poriz'] // 할당할 사용자의 GitHub 사용자명
-              });
             }
 
             // 함수 실행
