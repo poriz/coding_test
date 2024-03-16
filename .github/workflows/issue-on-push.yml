@@ -1,4 +1,4 @@
-name: Create Issue from Commit and Link to Project
+name: Create Issue with File Links
 
 on:
   push:
@@ -16,46 +16,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 2  # 변경 사항을 확인하기 위해 최소한의 깊이 설정
+          fetch-depth: 2
 
       - name: Get changed files
         id: changed-files
         run: |
-          echo "::set-output name=list::$(git diff --name-only HEAD^ HEAD | xargs -I {} echo \"- {}\" | tr '\n' ',')"
+          echo "::set-output name=list::$(git diff --name-only HEAD^ HEAD | xargs -I {} echo \"{}\" | tr '\n' ',')"
 
-      - name: Get last commit message
-        id: last-commit-message
-        run: echo "::set-output name=message::$(git log -1 --pretty=%B)"
-
-      - name: Create Issue
+      - name: Create Issue with Links
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             async function run() {
-              // UTC 시간을 기준으로 현재 시간을 가져온 후, KST로 변환 (UTC+9)
-              const now = new Date();
-              now.setHours(now.getHours() + 9); // KST로 변환
-              const formattedNow = now.toISOString().replace('T', ' ').substring(0, 16).replace('Z', '');
+              const repositoryUrl = context.payload.repository.html_url;
+              const changedFiles = "${{ steps.changed-files.outputs.list }}".slice(0, -1).split(',');
+              const changedFilesLinks = changedFiles.map(file => `[${file}](${repositoryUrl}/blob/main/${file})`).join('\n');
 
-              const commitMessage = `${process.env.COMMIT_MESSAGE}`;
-              const changedFiles = process.env.CHANGED_FILES.split(',').join('\\n');
+              const issueBody = `This issue is automatically generated from the last commit on the main branch.\n\n### Changed Files:\n${changedFilesLinks}`;
 
-              const issueTitle = `[${formattedNow} KST] ${commitMessage}`;
-              const issueBody = `This issue is automatically generated from the last commit on the main branch.\\n\\n### Changed Files:\\n${changedFiles}`;
-
-              const response = await github.rest.issues.create({
+              await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: issueTitle,
+                title: 'Automatically Generated Issue from Push',
                 body: issueBody,
                 labels: ['auto-generated'],
               });
-
-              console.log(`Issue created: ${response.data.html_url}`);
             }
             
             run().catch(err => console.error(err));
-        env:
-          COMMIT_MESSAGE: ${{ steps.last-commit-message.outputs.message }}
-          CHANGED_FILES: ${{ steps.changed-files.outputs.list }}
