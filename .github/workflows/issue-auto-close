@@ -1,0 +1,40 @@
+name: Auto Close Excess Issues
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 매일 자정에 실행
+
+jobs:
+  close-issues:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq curl
+
+    - name: Close excess issues
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_THRESHOLD: 100 # 최대 열린 이슈 수
+      run: |
+        # 현재 열린 이슈의 총 수를 가져옵니다.
+        TOTAL_ISSUES=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+        https://api.github.com/repos/${{ github.repository }}/issues?state=open | jq '. | length')
+        
+        # 설정한 임곗값을 초과하는 경우, 초과하는 만큼 가장 오래된 이슈를 닫습니다.
+        if [ "$TOTAL_ISSUES" -gt "$ISSUE_THRESHOLD" ]; then
+          EXCESS=$(expr $TOTAL_ISSUES - $ISSUE_THRESHOLD)
+          ISSUE_NUMBERS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          https://api.github.com/repos/${{ github.repository }}/issues?state=open&sort=created&direction=asc | jq '.[] | .number' | head -n $EXCESS)
+          
+          for ISSUE_NUMBER in $ISSUE_NUMBERS; do
+            curl -s -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
+            -d '{"state": "closed"}' \
+            https://api.github.com/repos/${{ github.repository }}/issues/$ISSUE_NUMBER
+            echo "Issue #$ISSUE_NUMBER closed."
+          done
+        fi
