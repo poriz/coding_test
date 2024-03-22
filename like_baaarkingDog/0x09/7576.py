@@ -27,7 +27,6 @@ else:
             n_row = row_q+r[dd]
             n_col = col_q+c[dd]
 
-# 이부분 문제.
             if (0<=n_row<len(tomatos) and 0<=n_col<len(tomatos[0]))and tomatos[n_row][n_col][0] == 0:
                 q.append([n_row,n_col])
                 next_day = tomatos[row_q][col_q][1] + 1
