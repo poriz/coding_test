@@ -28,11 +28,9 @@ for r in range(ROW):
                         q.append([n_row,n_col])
                         art_map[n_row][n_col] = 2
                         count+=1
-
             if count>max:
                 max = count
             art_num +=1
-
 
 print(art_num)
 print(max)
