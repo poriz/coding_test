@@ -19,7 +19,7 @@ jobs:
     - name: Close excess issues
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        ISSUE_THRESHOLD: 100 # 최대 열린 이슈 수
+        ISSUE_THRESHOLD: 20 # 최대 열린 이슈 수
       run: |
         # 현재 열린 이슈의 총 수를 가져옵니다.
         TOTAL_ISSUES=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
