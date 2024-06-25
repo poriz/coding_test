@@ -1,0 +1,10 @@
+WITH CTE AS (
+    SELECT s.book_id, s.sales_date, s.sales, b.category
+    FROM BOOK_SALES s JOIN BOOK b
+        ON s.BOOK_ID = b.BOOK_ID
+    WHERE s.SALES_DATE like '2022-01%'
+)
+SELECT CATEGORY, SUM(SALES) AS TOTAL_SALES
+FROM CTE
+GROUP BY CATEGORY
+ORDER BY CATEGORY
