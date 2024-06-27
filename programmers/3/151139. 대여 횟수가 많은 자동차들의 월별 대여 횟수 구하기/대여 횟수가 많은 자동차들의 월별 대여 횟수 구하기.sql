@@ -1,7 +1,7 @@
 WITH CTE AS (
     SELECT *,DATE_FORMAT(start_date,'%Y-%m') as m, MONTH(start_date) as mm
     FROM CAR_RENTAL_COMPANY_RENTAL_HISTORY
-    WHERE MONTH(start_date) BETWEEN '8' AND '10'
+    WHERE start_date BETWEEN '2022-08-01' AND '2022-10-31'
 ), CTE2 AS (
     SELECT car_id, COUNT(car_id) as c
     FROM CTE
