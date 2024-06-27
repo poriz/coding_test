@@ -16,3 +16,7 @@ for i in range(1,a+1):
     for j in range(1,b+1):
         cache[i][j] = cache[i-1][j] + cache[i-1][j-1]
 print(cache[a][b])
+
+# 이렇게 푸는 법도 있음.
+from math import factorial
+print(factorial(a)//(factorial(a-b)*factorial(b)))
