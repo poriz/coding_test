@@ -10,7 +10,7 @@ FROM CTE
 WHERE rk = 1
 ORDER BY PRICE DESC
 
-
+# 이렇게 푸는 법도 있음
 # with shortlist as (
 # SELECT category, max(price) as max_price, product_name
 # from food_product
