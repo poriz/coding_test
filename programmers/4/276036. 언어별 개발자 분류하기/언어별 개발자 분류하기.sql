@@ -1,0 +1,30 @@
+# SELECT 8452 & 128 => 0이면 없고 자기자신이면 있는거임
+WITH CTE AS (
+    SELECT *
+    FROM DEVELOPERS d
+    LEFT JOIN SKILLCODES c
+    ON d.skill_code & c.CODE <> 0
+),
+CTE2 AS (
+    SELECT ID, FIRST_NAME, LAST_NAME, EMAIL,
+        GROUP_CONCAT(CATEGORY SEPARATOR ', ') AS CATEGORIES,
+        GROUP_CONCAT(NAME SEPARATOR ', ') AS NAMES
+    FROM CTE
+    GROUP BY ID, FIRST_NAME, LAST_NAME, EMAIL
+), 
+CTE3 AS (
+    SELECT
+        CASE
+            WHEN CATEGORIES LIKE '%Front End%' AND NAMES LIKE '%Python%' THEN 'A'
+            WHEN NAMES LIKE '%C#%' THEN 'B'
+            WHEN CATEGORIES LIKE '%Front End%' THEN 'C'
+        END AS GRADE,
+        ID,
+        EMAIL
+    FROM CTE2
+    
+)
+SELECT *
+FROM CTE3
+WHERE GRADE IS NOT NULL
+ORDER BY GRADE,ID
