@@ -1,4 +1,4 @@
-# SELECT 8452 & 128 => 0이면 없고 자기자신이면 있는거임
+# SELECT 8452 & 128 => 0이면 없음
 WITH CTE AS (
     SELECT *
     FROM DEVELOPERS d
