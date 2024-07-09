@@ -1,0 +1,8 @@
+-- 중성화가 안되어있는 input을 찾아야함.
+SELECT i.ANIMAL_ID, i.ANIMAL_TYPE, i.NAME
+FROM ANIMAL_INS i JOIN ANIMAL_OUTS o
+    ON i.ANIMAL_ID = o.ANIMAL_ID
+    AND i.SEX_UPON_INTAKE LIKE 'Intact%'
+    AND o.SEX_UPON_OUTCOME not LIKE 'Intact%'
+ORDER BY i.ANIMAL_ID
+    
