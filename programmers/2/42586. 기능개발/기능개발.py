@@ -1,20 +1,17 @@
 from collections import deque
 def solution(progresses, speeds):
     answer = []
-    progresses = deque(progresses)
     speeds = deque(speeds)
-    
     while progresses:
-        for i in range(len(progresses)):
-            progresses[i] += speeds[i]
+        deploy_count = 0
+        progresses = deque([i+p for i,p in zip(progresses,speeds)])
         
-        count = 0
         while progresses and progresses[0] >= 100:
             progresses.popleft()
             speeds.popleft()
-            count+=1
-        if count !=0:
-            answer.append(count)
-    
-    return answer
+            deploy_count+=1
+            
+        if deploy_count:
+            answer.append(deploy_count)
 
+    return answer
